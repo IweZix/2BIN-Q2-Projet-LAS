@@ -69,10 +69,14 @@ void child_handler(void *args) {
   int *pipefd = (int *)args;
   int pipeRead = pipefd[0];
 
-  while (1) {
+  int tuilesLues = 0;
+
+  while (tuilesLues < 20) {
     struct pollfd fd;
     fd.fd = pipeRead;
     fd.events = POLLIN;
+
+    printf("Tuiels lues : %d\n", tuilesLues);
 
     // Utilisez poll pour surveiller le tube en lecture
     int ret = poll(&fd, 1, -1);
@@ -82,6 +86,7 @@ void child_handler(void *args) {
       sread(pipeRead, &tuile, sizeof(int));
 
       printf("Tuile : %d recu par : %d \n", tuile, getpid());
+      tuilesLues++;
     }
   }
 }
@@ -229,12 +234,12 @@ int main(int argc, char const *argv[]) {
   }
 
   // Envoi des tuiles
-  int tour = 0;
+  int tour = 1;
   // int nbJoueurAJouer = 0;
 
-  while (tour < 19) {
+  while (tour < 21) {
     poll(fdsChild, nbPlayer, 0);
-    int tuile = tuiles[tour];
+    int tuile = tuiles[tour-1];
 
     for (int i = 0; i < nbPlayer; i++) {
       if (fdsChild[i].revents & POLLOUT) {
@@ -245,6 +250,11 @@ int main(int argc, char const *argv[]) {
     sleep(1);
 
     tour++;
+  }
+  
+  // attendre les enfants
+  for (int i = 0; i < nbPlayer; i++) {
+    swaitpid(childTab[i], NULL, 0);
   }
 
   close(sockfd);
