@@ -16,7 +16,7 @@
 
 // Struct Player
 typedef struct Player {
-  char pseudo[50];
+  char pseudo[100];
   int socketfd;
   int score;
 } Player;
@@ -26,6 +26,12 @@ enum Code {
   INSCRIPTION_REQUEST = 1,
   INSCRIPTION_OK = 2,
   INSCRIPTION_KO = 3,
+
+  TUILE = 4,
+  EMPLACEMENT = 5,
+
+  ENVOIE = 6,
+  RECEPTION = 7,
 };
 
 // Struct Message
@@ -33,5 +39,17 @@ typedef struct StructMessage {
   char message[100];
   int code;
 } StructMessage;
+
+typedef struct StructClientCommunication {
+  int tuile;
+  int emplacement;
+  int code;
+} StructClientCommunication;
+
+typedef struct StructPipeCommunication {
+  int tuile;
+  int code;
+} StructPipeCommunication;
+
 
 #endif // _HEADER_H_
