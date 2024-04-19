@@ -64,6 +64,9 @@ int main(int argc, char const *argv[]) {
 
   while (nbTuiles < 20) {
     sread(sockfd, &tuileCommunication, sizeof(tuileCommunication));
+    while (tuileCommunication.code != TUILE) {
+      sread(sockfd, &tuileCommunication, sizeof(tuileCommunication));
+    }
     
     printColor("\n%s\n", "Voici le plateau actuel", 32);
     printPlateau(plateau);

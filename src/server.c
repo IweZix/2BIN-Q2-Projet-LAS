@@ -64,16 +64,14 @@ void closeAll(Player *shared_memory, int shm_id, int sem_id) {
   sem_delete(sem_id);
 }
 
+
 /**
  * Handle child process
 */
-// note mr gillard: on a le droit de tout caster en void* car
-// int[2] decay vers un int* (pointeur) et int a la meme taille qu'un pointeur aussi
-// (void* a la meme taille que int)
 void child_handler(void* pipe, void* socket) {
   int *pipefd = (int *)pipe;
   int pipeRead = pipefd[0];
-  // int pipeWrite = pipefd[1];
+  int pipeWrite = pipefd[1];
 
   int *socketfd = (int *)socket;
   int sockfd = socketfd[0];
@@ -113,7 +111,8 @@ void child_handler(void* pipe, void* socket) {
     }
 
     // envoye au pipe que c'est ok
-
+    pipeCommunication.code = RECEPTION;
+    swrite(pipeWrite, &pipeCommunication, sizeof(pipeCommunication));
   }
 }
 
@@ -245,11 +244,13 @@ int main(int argc, char const *argv[]) {
   // Envoi des tuiles
   int tour = 1;
   StructPipeCommunication pipeCommunication;
-  // int nbJoueurAJouer = 0;
+  int nbJoueurAJouer = 0;
 
   while (tour < 21) {
     poll(fdsChild, nbPlayer, 0);
     int tuile = tuiles[tour-1];
+
+    nbJoueurAJouer = 0;
 
     // envoyer la tuile à tous les joueurs
     for (int i = 0; i < nbPlayer; i++) {
@@ -261,6 +262,7 @@ int main(int argc, char const *argv[]) {
     }
 
     // attendre que tous les joueurs aient joué
+    
 
     tour++;
   }
