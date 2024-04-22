@@ -27,11 +27,16 @@ enum Code {
   INSCRIPTION_OK = 2,
   INSCRIPTION_KO = 3,
 
-  TUILE = 4,
-  EMPLACEMENT = 5,
+  // Communication
+  ENVOIE_TUILE = 4,
+  RECEPTION_EMPLACEMENT = 5,
 
-  ENVOIE = 6,
-  RECEPTION = 7,
+  // Pipe
+  ENVOIE_PIPE = 6,
+  ENVOIE_PARENT = 7,
+
+  // End
+  END = 8
 };
 
 // Struct Message

@@ -64,7 +64,7 @@ int main(int argc, char const *argv[]) {
 
   while (nbTuiles < 20) {
     sread(sockfd, &tuileCommunication, sizeof(tuileCommunication));
-    while (tuileCommunication.code != TUILE) {
+    while (tuileCommunication.code != ENVOIE_TUILE) {
       sread(sockfd, &tuileCommunication, sizeof(tuileCommunication));
     }
     
@@ -95,7 +95,7 @@ int main(int argc, char const *argv[]) {
     nbTuiles++;
 
     tuileCommunication.emplacement = position;
-    tuileCommunication.code = EMPLACEMENT;
+    tuileCommunication.code = RECEPTION_EMPLACEMENT;
 
     swrite(sockfd, &tuileCommunication, sizeof(tuileCommunication));
   }
@@ -109,6 +109,7 @@ int main(int argc, char const *argv[]) {
   int score;
   scanf("%d", &score);
   
+  swrite(sockfd, &score, sizeof(int));
 
   
 
