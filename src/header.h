@@ -36,6 +36,7 @@ enum Code {
   ENVOIE_PARENT = 7,
 
   ENVOIE_SCORE = 9,
+  LECTURE_SCORE = 10,
 
   // End
   END = 8

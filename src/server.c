@@ -116,9 +116,24 @@ void child_handler(void* pipeEcriture, void* pipeLecture, void* socket) {
   pipeCommunicationEcriture.code = ENVOIE_SCORE;
   swrite(pipefdEcriture[1], &pipeCommunicationEcriture, sizeof(pipeCommunicationEcriture));
 
-  // récupération des score en mémoire partagée
-  //int shm_id = sshmget(KEY, MAX_PLAYER*sizeof(Player), 0);
-  //Player *shared_memory = sshmat(shm_id);
+  // récupération du message de lecture des scores
+  sread(pipefdLecture[0], &pipeCommunicationLecture, sizeof(pipeCommunicationLecture));
+  while (pipeCommunicationLecture.code != LECTURE_SCORE) {
+    sread(pipefdLecture[0], &pipeCommunicationLecture, sizeof(pipeCommunicationLecture));
+  }
+
+  // lectrue des scores en mémoire partagée
+  int sem_id = sem_create(SEM_KEY, 2, PERM, 1);
+  int shmid = sshmget(KEY, MAX_PLAYER*sizeof(Player), 0);
+  Player *shared_memory = sshmat(shmid);
+
+  for (int i = 0; i < MAX_PLAYER; i++) {
+    sem_down(sem_id, 0);
+    if (shared_memory[i].pseudo[0] != '\0') {
+      printColor("\n%s : %d\n", shared_memory[i].pseudo, shared_memory[i].score);
+    }
+    sem_up(sem_id, 0);
+  }
 
   exit(0);
 }
@@ -287,13 +302,14 @@ int main(int argc, char const *argv[]) {
 
   printf("Fin du jeu\n");
 
+  // envoie un message au pipe pour signalez la fin du jeu
   for (int i = 0; i < nbPlayer; i++) {
     pipeCommunication.tuile = 0;
     pipeCommunication.code = ENVOIE_SCORE;
     swrite(fdsChildEcriture[i].fd, &pipeCommunication, sizeof(pipeCommunication));
   }
 
-  // affiche les scores avec poll
+  // récupère les scores avec poll
   int nbPlayerScore = 0;
   StructPipeCommunication pipeCommunicationScore;
   while (nbPlayerScore < nbPlayer) {
@@ -308,8 +324,6 @@ int main(int argc, char const *argv[]) {
       }
     }
   }
-
-  printf("Scores : \n");
 
   // tri des scores
   for (int i = 0; i < nbPlayer; i++) {
@@ -330,12 +344,15 @@ int main(int argc, char const *argv[]) {
     shared_memory[i] = players[i];
   }
 
-  for (int i = 0; i < nbPlayer; i++) {
-    printf("%s : %d\n", players[i].pseudo, players[i].score);
-  }
-
   // up semaphore
   sem_up(sem_id, 0);
+
+  // envoie un message au pipe pour dire qu'il peut lire les scores
+  for (int i = 0; i < nbPlayer; i++) {
+    pipeCommunication.tuile = 0;
+    pipeCommunication.code = LECTURE_SCORE;
+    swrite(fdsChildEcriture[i].fd, &pipeCommunication, sizeof(pipeCommunication));
+  }
   
   
   // attendre les enfants
