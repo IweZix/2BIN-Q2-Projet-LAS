@@ -104,6 +104,11 @@ void child_handler(void* pipeEcriture, void* pipeLecture, void* socket) {
     nbTour++;
   }
 
+  sread(pipefdLecture[0], &pipeCommunicationLecture, sizeof(pipeCommunicationLecture));
+  while (pipeCommunicationLecture.code != ENVOIE_SCORE) {
+    sread(pipefdLecture[0], &pipeCommunicationLecture, sizeof(pipeCommunicationLecture));
+  }
+
   // récupération et envoie du score aux serveur
   int score;
   sread(*socketfd, &score, sizeof(int));
@@ -266,7 +271,7 @@ int main(int argc, char const *argv[]) {
 
     int nbJoueurAJouer = 0;
     while (nbJoueurAJouer < nbPlayer) {
-      int ret = spoll(fdsChildLecture, nbPlayer, 10000);
+      int ret = spoll(fdsChildLecture, nbPlayer, 0);
       if (ret > 0) {
         for (int i = 0; i < nbPlayer; i++) {
           if (fdsChildLecture[i].revents & POLLIN) {
@@ -282,16 +287,55 @@ int main(int argc, char const *argv[]) {
 
   printf("Fin du jeu\n");
 
-  // affiche les scores
   for (int i = 0; i < nbPlayer; i++) {
-    StructPipeCommunication pipeCommunication;
-    sread(fdsChildLecture[i].fd, &pipeCommunication, sizeof(pipeCommunication));
-    while (pipeCommunication.code != ENVOIE_SCORE) {
-      sread(fdsChildLecture[i].fd, &pipeCommunication, sizeof(pipeCommunication));
+    pipeCommunication.tuile = 0;
+    pipeCommunication.code = ENVOIE_SCORE;
+    swrite(fdsChildEcriture[i].fd, &pipeCommunication, sizeof(pipeCommunication));
+  }
+
+  // affiche les scores avec poll
+  int nbPlayerScore = 0;
+  StructPipeCommunication pipeCommunicationScore;
+  while (nbPlayerScore < nbPlayer) {
+    int ret = spoll(fdsChildLecture, nbPlayer, 0);
+    if (ret > 0) {
+      for (int i = 0; i < nbPlayer; i++) {
+        if (fdsChildLecture[i].revents & POLLIN) {
+          sread(fdsChildLecture[i].fd, &pipeCommunicationScore, sizeof(pipeCommunicationScore));
+          players[i].score = pipeCommunicationScore.tuile;
+          nbPlayerScore++;
+        }
+      }
     }
   }
 
   printf("Scores : \n");
+
+  // tri des scores
+  for (int i = 0; i < nbPlayer; i++) {
+    for (int j = i+1; j < nbPlayer; j++) {
+      if (players[i].score < players[j].score) {
+        Player temp = players[i];
+        players[i] = players[j];
+        players[j] = temp;
+      }
+    }
+  }
+
+  // down semaphore
+  sem_down(sem_id, 0);
+
+  // envoi des scores en mémoire
+  for (int i = 0; i < nbPlayer; i++) {
+    shared_memory[i] = players[i];
+  }
+
+  for (int i = 0; i < nbPlayer; i++) {
+    printf("%s : %d\n", players[i].pseudo, players[i].score);
+  }
+
+  // up semaphore
+  sem_up(sem_id, 0);
   
   
   // attendre les enfants
