@@ -14,6 +14,8 @@
 #include "utils_v1.h"
 #include "header.h"
 
+typedef void (*childhandler_fn)(void*, void*, void*); 
+
 /**
  * Create a socket server
 */
@@ -65,30 +67,55 @@ void closeAll(Player *shared_memory, int shm_id, int sem_id) {
 /**
  * Handle child process
 */
-void child_handler(void *args) {
-  int *pipefd = (int *)args;
-  int pipeRead = pipefd[0];
+void child_handler(void* pipeEcriture, void* pipeLecture, void* socket) {
+  int *pipefdEcriture = (int *) pipeEcriture;
+  int *pipefdLecture = (int *) pipeLecture;
+  int *socketfd = (int *) socket;
 
-  int tuilesLues = 0;
+  StructPipeCommunication pipeCommunicationEcriture;
+  StructPipeCommunication pipeCommunicationLecture;
+  
+  StructClientCommunication clientCommunication;
 
-  while (tuilesLues < 20) {
-    struct pollfd fd;
-    fd.fd = pipeRead;
-    fd.events = POLLIN;
+  int nbTour = 0;
+  while (nbTour < 20) {
+    // Lecture de la tuile
+    sread(pipefdLecture[0], &pipeCommunicationLecture, sizeof(pipeCommunicationLecture));
+    int tuile = pipeCommunicationLecture.tuile;
 
-    printf("Tuiels lues : %d\n", tuilesLues);
+    // Envoi de la tuile
+    clientCommunication.tuile = tuile;
+    clientCommunication.code = ENVOIE_TUILE;
+    swrite(*socketfd, &clientCommunication, sizeof(clientCommunication));
 
-    // Utilisez poll pour surveiller le tube en lecture
-    int ret = poll(&fd, 1, -1);
-    if (ret > 0 && (fd.revents & POLLIN)) {
-      int tuile;
-      // read tuile
-      sread(pipeRead, &tuile, sizeof(int));
-
-      printf("Tuile : %d recu par : %d \n", tuile, getpid());
-      tuilesLues++;
+    // Lecture de l'emplacement
+    sread(*socketfd, &clientCommunication, sizeof(clientCommunication));
+    while (clientCommunication.code != RECEPTION_EMPLACEMENT) {
+      sread(*socketfd, &clientCommunication, sizeof(clientCommunication));
     }
+
+    int emplacement = clientCommunication.emplacement;
+
+    // Envoi de l'emplacement
+    pipeCommunicationEcriture.tuile = emplacement;
+    pipeCommunicationEcriture.code = ENVOIE_PARENT;
+    swrite(pipefdEcriture[1], &pipeCommunicationEcriture, sizeof(pipeCommunicationEcriture));
+
+    nbTour++;
   }
+
+  // récupération et envoie du score
+  int score;
+  sread(*socketfd, &score, sizeof(int));
+  swrite(pipefdEcriture[1], &score, sizeof(int));
+
+  // récuparation des scores en mémoire partagée
+  sread(pipefdLecture[0], &pipeCommunicationLecture, sizeof(pipeCommunicationLecture));
+  while (pipeCommunicationLecture.code != END) {
+    sread(pipefdLecture[0], &pipeCommunicationLecture, sizeof(pipeCommunicationLecture));
+  }
+
+  // TODO: récupération des scores en mémoire partagée
 }
 
 
@@ -130,7 +157,7 @@ int main(int argc, char const *argv[]) {
     int newsockfd = accept(sockfd, NULL, NULL);
     if (newsockfd > 0) {
       // read pseudo
-      sread(newsockfd, &msg, sizeof(int));
+      sread(newsockfd, &msg, sizeof(msg));
       // stdout pseudo
       char buffer[200] = "Inscription demandée par le joueur ";
       strcat(buffer, msg.message);
@@ -200,57 +227,102 @@ int main(int argc, char const *argv[]) {
     printf("%d\n", tuiles[i]);
   }
 
-  /*for (int i = 0; i < nbPlayer; i++) {
-    printf("Player %d : \n", i);
-    printf("pseudo : %s\n", players[i].pseudo);
-    printf("socket : %d\n", players[i].socketfd);
-    printf("score : %d\n", players[i].score);
-    printf("fds %d : \n", i);
-    printf("socket : %d\n", fds[i].fd);
-    printf("events : %d\n", fds[i].events);
-
-    printf("shared_memory %d : \n", i);
-    printf("pseudo : %s\n", shared_memory[i].pseudo);
-    printf("socket : %d\n", shared_memory[i].socketfd);
-    printf("score : %d\n", shared_memory[i].score);
-
-    printf("\n\n");
-  }*/
-
   // Création de tous les pipes
   int *childTab = malloc(nbPlayer * sizeof(pid_t));
 
-  struct pollfd *fdsChild = malloc(nbPlayer * sizeof(struct pollfd));
+  struct pollfd *fdsChildLecture = malloc(nbPlayer * sizeof(struct pollfd));
+  struct pollfd *fdsChildEcriture = malloc(nbPlayer * sizeof(struct pollfd));
 
   for (int i = 0; i < nbPlayer; i++) {
-    int pipefd[2];
-    spipe(pipefd);
+    int pipefdLecture[2];
+    spipe(pipefdLecture);
+    int pipefdEcriture[2];
+    spipe(pipefdEcriture);
 
-    pid_t childId = fork_and_run1(child_handler, pipefd);
+    
+
+    pid_t childId = fork_and_run3((childhandler_fn) child_handler, pipefdLecture, pipefdEcriture, &players[i].socketfd);
     childTab[i] = childId;
 
-    fdsChild[i].fd = pipefd[1];
-    fdsChild[i].events = POLLOUT;
+    fdsChildLecture[i].fd = pipefdLecture[0];
+    fdsChildLecture[i].events = POLLIN;
+
+    fdsChildEcriture[i].fd = pipefdEcriture[1];
+    fdsChildEcriture[i].events = POLLOUT;
   }
 
   // Envoi des tuiles
   int tour = 1;
-  // int nbJoueurAJouer = 0;
+  StructPipeCommunication pipeCommunication;
 
   while (tour < 21) {
-    poll(fdsChild, nbPlayer, 0);
     int tuile = tuiles[tour-1];
 
     for (int i = 0; i < nbPlayer; i++) {
-      if (fdsChild[i].revents & POLLOUT) {
-        swrite(fdsChild[i].fd, &tuile, sizeof(int));
+      pipeCommunication.tuile = tuile;
+      pipeCommunication.code = ENVOIE_PIPE;
+      swrite(fdsChildEcriture[i].fd, &pipeCommunication, sizeof(pipeCommunication));
+    }
+
+    int nbJoueurAJouer = 0;
+    while (nbJoueurAJouer < nbPlayer) {
+      int ret = spoll(fdsChildLecture, nbPlayer, 10000);
+      if (ret > 0) {
+        for (int i = 0; i < nbPlayer; i++) {
+          if (fdsChildLecture[i].revents & POLLIN) {
+            sread(fdsChildLecture[i].fd, &pipeCommunication, sizeof(pipeCommunication));
+            printf("Tuile %d placée à l'emplacement %d\n", tuile, pipeCommunication.tuile);
+            nbJoueurAJouer++;
+          }
+        }
       }
     }
 
-    sleep(1);
-
     tour++;
   }
+
+  printf("Fin du jeu\n");
+
+  // récupération des scores
+  for (int i = 0; i < nbPlayer; i++) {
+    int score;
+    sread(fdsChildLecture[i].fd, &score, sizeof(int));
+    players[i].score = score;
+  }
+
+  // impression des scores
+  for (int i = 0; i < nbPlayer; i++) {
+    printf("Joueur %s : %d\n", players[i].pseudo, players[i].score);
+  }
+
+  // tri des scores
+  for (int i = 0; i < nbPlayer; i++) {
+    for (int j = i+1; j < nbPlayer; j++) {
+      if (players[i].score < players[j].score) {
+        Player temp = players[i];
+        players[i] = players[j];
+        players[j] = temp;
+      }
+    }
+  }
+
+  // down semaphore
+  sem_down(sem_id, 0);
+
+  // envoi des scores en mémoire
+  for (int i = 0; i < nbPlayer; i++) {
+    shared_memory[i] = players[i];
+  }
+
+  // up semaphore
+  sem_up(sem_id, 0);
+
+  // envoie un message au fils pour dire qu'il peut lire les scores
+  for (int i = 0; i < nbPlayer; i++) {
+    pipeCommunication.code = END;
+    swrite(fdsChildEcriture[i].fd, &pipeCommunication, sizeof(pipeCommunication));
+  }
+
   
   // attendre les enfants
   for (int i = 0; i < nbPlayer; i++) {

@@ -26,6 +26,13 @@ int initSocketClient() {
   return sockfd;
 }
 
+void printPlateau(int *plateau) {
+  for (int i = 0; i < 20; i++) {
+    printf("%d ", plateau[i]);
+  }
+  printf("\n");
+}
+
 int main(int argc, char const *argv[]) {
 
   printf("Bienvenue dans le programe d'inscription au serveur de jeu\n");
@@ -46,6 +53,63 @@ int main(int argc, char const *argv[]) {
   } else {
     printColor("\n%s\n", "Inscription échouée", 31);
   }
+
+  StructClientCommunication tuileCommunication;
+
+  int plateau[20] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  };
+
+  int nbTuiles = 0;
+
+  while (nbTuiles < 20) {
+    sread(sockfd, &tuileCommunication, sizeof(tuileCommunication));
+    while (tuileCommunication.code != ENVOIE_TUILE) {
+      sread(sockfd, &tuileCommunication, sizeof(tuileCommunication));
+    }
+    
+    printColor("\n%s\n", "Voici le plateau actuel", 32);
+    printPlateau(plateau);
+    printColor("\n%s", "Voici la tuile que vous avez reçu : ", 32);
+    printf("%d\n", tuileCommunication.tuile);
+
+    int position;
+    printColor("\n%s", "Entrez la position où vous voulez placer la tuile : ", 32);
+    scanf("%d", &position);
+
+    if (position < 0 || position > 19) {
+      printColor("\n%s\n", "Position invalide", 31);
+      continue;
+    }
+
+    while (plateau[position] != 0) {
+      if (position == 19) {
+        position = 0;
+      } else {
+        position++;
+      }
+    }
+
+    plateau[position] = tuileCommunication.tuile;
+    
+    nbTuiles++;
+
+    tuileCommunication.emplacement = position;
+    tuileCommunication.code = RECEPTION_EMPLACEMENT;
+
+    swrite(sockfd, &tuileCommunication, sizeof(tuileCommunication));
+  }
+
+  printColor("\n%s\n", "Partie terminée", 32);
+
+  printColor("\n%s\n", "Voici le plateau final", 32);
+  printPlateau(plateau);
+
+  printColor("\n%s", "Entrez votre score : ", 32);
+  int score;
+  scanf("%d", &score);
+  
+  swrite(sockfd, &score, sizeof(int));
 
   
 
