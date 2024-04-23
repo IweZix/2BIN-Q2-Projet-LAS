@@ -104,7 +104,7 @@ void child_handler(void* pipeEcriture, void* pipeLecture, void* socket) {
     nbTour++;
   }
 
-  // récupération et envoie du score
+  // récupération et envoie du score aux serveur
   int score;
   sread(*socketfd, &score, sizeof(int));
   swrite(pipefdEcriture[1], &score, sizeof(int));
@@ -116,6 +116,8 @@ void child_handler(void* pipeEcriture, void* pipeLecture, void* socket) {
   }
 
   // TODO: récupération des scores en mémoire partagée
+
+  exit(0);
 }
 
 
@@ -223,9 +225,9 @@ int main(int argc, char const *argv[]) {
     tuilesRestantes[random]--;    
   }
   
-  for (int i = 0; i < 20; i++) {
+  /*for (int i = 0; i < 20; i++) {
     printf("%d\n", tuiles[i]);
-  }
+  }*/
 
   // Création de tous les pipes
   int *childTab = malloc(nbPlayer * sizeof(pid_t));
@@ -291,9 +293,9 @@ int main(int argc, char const *argv[]) {
   }
 
   // impression des scores
-  for (int i = 0; i < nbPlayer; i++) {
+  /*for (int i = 0; i < nbPlayer; i++) {
     printf("Joueur %s : %d\n", players[i].pseudo, players[i].score);
-  }
+  }*/
 
   // tri des scores
   for (int i = 0; i < nbPlayer; i++) {
@@ -316,13 +318,6 @@ int main(int argc, char const *argv[]) {
 
   // up semaphore
   sem_up(sem_id, 0);
-
-  // envoie un message au fils pour dire qu'il peut lire les scores
-  for (int i = 0; i < nbPlayer; i++) {
-    pipeCommunication.code = END;
-    swrite(fdsChildEcriture[i].fd, &pipeCommunication, sizeof(pipeCommunication));
-  }
-
   
   // attendre les enfants
   for (int i = 0; i < nbPlayer; i++) {
