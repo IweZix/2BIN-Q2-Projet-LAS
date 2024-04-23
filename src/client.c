@@ -36,7 +36,6 @@ void printPlateau(int *plateau) {
 int calculeScore(int plateau[20]) {
     int nb_suites = 0; 
     int suites_par_longueur[20] = {0}; 
-    int score_par_longueur[20] = {0}; 
 
     int i = 0;
     
@@ -145,10 +144,12 @@ int main(int argc, char const *argv[]) {
   printPlateau(plateau);
 
   int score = calculeScore(plateau);
+  printf("Votre score est de %d\n", score);
   
   swrite(sockfd, &score, sizeof(int));
 
-  // Lecture des scores dans la mémoire partagée
+  // lecture du tableau des scores dans le socket
+  
   
 
   

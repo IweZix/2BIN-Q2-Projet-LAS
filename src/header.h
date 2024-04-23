@@ -35,6 +35,8 @@ enum Code {
   ENVOIE_PIPE = 6,
   ENVOIE_PARENT = 7,
 
+  ENVOIE_SCORE = 9,
+
   // End
   END = 8
 };
