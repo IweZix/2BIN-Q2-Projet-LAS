@@ -65,7 +65,7 @@ void closeAll(Player *shared_memory, int shm_id, int sem_id) {
 }
 
 /**
- * Handle child process
+ * Handle child process.
 */
 void child_handler(void* pipeEcriture, void* pipeLecture, void* socket) {
   int *pipefdEcriture = (int *) pipeEcriture;
@@ -212,6 +212,7 @@ int main(int argc, char const *argv[]) {
 
   if (nbPlayer < 2) {
     printColor("\n%s\n", "Il n'y a pas assez de joueurs pour lancer la partie", 31);
+    close(sockfd);
     closeAll(shared_memory, shm_id, sem_id);
     return 0;
   }
@@ -341,8 +342,12 @@ int main(int argc, char const *argv[]) {
 
   // envoi des scores en mémoire
   for (int i = 0; i < nbPlayer; i++) {
-    shared_memory[i] = players[i];
+    shared_memory[i].score = players[i].score;
   }
+
+  /*for (int i = 0; i < nbPlayer; i++) {
+    printf("Player : %s, Score : %d\n", shared_memory[i].pseudo, shared_memory[i].score);
+  }*/
 
   // up semaphore
   sem_up(sem_id, 0);
@@ -364,3 +369,8 @@ int main(int argc, char const *argv[]) {
   closeAll(shared_memory, shm_id, sem_id);
   return 0;
 }
+
+/**
+ * Le serveur écrit en mémoire partagée mais le fils n'arrive pas à lire les scores. 
+ * Alors qu'il arrive à lire les pseudo.
+*/
