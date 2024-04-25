@@ -323,6 +323,11 @@ int main(int argc, char const *argv[]) {
     }
   }
 
+  printf("avant tri\n");
+  for (int i = 0; i < nbPlayer; i++) {
+    printf("%s : %d\n", players[i].pseudo, players[i].score);
+  }
+
   // tri des scores
   for (int i = 0; i < nbPlayer; i++) {
     for (int j = i+1; j < nbPlayer; j++) {
@@ -334,6 +339,11 @@ int main(int argc, char const *argv[]) {
     }
   }
 
+  printf("après tri\n");
+  for (int i = 0; i < nbPlayer; i++) {
+    printf("%s : %d\n", players[i].pseudo, players[i].score);
+  }
+
   for (int i = nbPlayer; i < MAX_PLAYER; i++) {
     players[i].pseudo[0] = '\0';
   }
@@ -342,8 +352,8 @@ int main(int argc, char const *argv[]) {
   sem_down(sem_id, 0);
 
   // envoi des scores en mémoire
-  for (int i = 0; i < nbPlayer; i++) {
-    shared_memory[i].score = players[i].score;
+  for (int i = 0; i < MAX_PLAYER; i++) {
+    shared_memory[i] = players[i];
   }
 
   // up semaphore

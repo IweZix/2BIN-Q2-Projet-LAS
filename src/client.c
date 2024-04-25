@@ -35,7 +35,7 @@ void printPlateau(int *plateau) {
 
 int calculeScore(int plateau[20]) {
     int nb_suites = 0; 
-    int suites_par_longueur[20] = {0}; 
+    int suites_par_longueur[21] = {0};
 
     int i = 0;
     
@@ -64,7 +64,7 @@ int calculeScore(int plateau[20]) {
 
 
     int score_total = 0;
-    for (int k = 2; k < 20; k++) {
+    for (int k = 2; k < 21; k++) { // Modifier la boucle pour inclure les index jusqu'à 20
         score_total += suites_par_longueur[k] * scores[k-1];
     }
 
