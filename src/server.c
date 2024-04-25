@@ -13,6 +13,7 @@
 
 #include "utils_v1.h"
 #include "header.h"
+#include "tuile.h"
 
 typedef void (*childhandler_fn)(void*, void*, void*); 
 
@@ -227,24 +228,8 @@ int main(int argc, char const *argv[]) {
   /**
    * Génération des tuiles
   */
-  int tuilesBase[31] = {
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
-  };
 
-  int tuilesRestantes[31] = {
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2,  2,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1
-  };
-
-  int tuiles[20];
-
-  for (int i = 0; i < 20; i++) {
-    int random = randomIntBetween(0, 30);
-    while (tuilesRestantes[random] == 0) {
-      random = randomIntBetween(0, 30);
-    }
-    tuiles[i] = tuilesBase[random];
-    tuilesRestantes[random]--;    
-  }
+  int *tuiles = genTuile();
 
   // Création de tous les pipes
   int *childTab = malloc(nbPlayer * sizeof(pid_t));

@@ -8,18 +8,21 @@ all: $(ALL)
 
 client : client.o utils_v1.o header.h
 	$(CC) $(CCFLAGS) -o client client.o utils_v1.o
-	
-client.o: client.c
+client.o : client.c
 	$(CC) $(CCFLAGS) -c client.c
 
-server : server.o utils_v1.o header.h
-	$(CC) $(CCFLAGS) -o server server.o utils_v1.o
 
-server.o: server.c
+server : server.o utils_v1.o tuile.o header.h 
+	$(CC) $(CCFLAGS) -o server server.o utils_v1.o tuile.o
+server.o : server.c
 	$(CC) $(CCFLAGS) -c server.c
+
 
 utils_v1.o: utils_v1.c utils_v1.h
 	$(CC) $(CCFLAGS) -c utils_v1.c
+
+tuile.o: tuile.c tuile.h utils_v1.h
+	$(CC) $(CCFLAGS) -c tuile.c
 
 clean:
 	rm -f *.o
