@@ -7,7 +7,7 @@
 #define PERM 0666
 
 // Socket
-#define SERVER_PORT 8080
+#define SERVER_PORT 9000
 #define SERVER_IP "127.0.0.1"
 #define BACKLOG 5
 
@@ -35,8 +35,11 @@ enum Code {
   ENVOIE_PIPE = 6,
   ENVOIE_PARENT = 7,
 
+  ENVOIE_SCORE = 9,
+  LECTURE_SCORE = 10,
+
   // End
-  END = 8
+  FIN = 8
 };
 
 // Struct Message
