@@ -76,9 +76,11 @@ int main(int argc, char const *argv[]) {
   printf("Bienvenue dans le programe d'inscription au serveur de jeu\n");
   printf("Pour participer entrez votre nom :\n");
   StructMessage msg;
-  int ret = sread(0, msg.message, 100);
-  msg.message[ret - 1] = '\0';
+  fgets(msg.message, sizeof(msg.message), stdin);
+  //msg.message[ret - 1] = '\0';
+  msg.message[strlen(msg.message) - 1] = '\0';
   msg.code = INSCRIPTION_REQUEST;
+  printf("Votre nom est : %s\n", msg.message);
 
   int sockfd = initSocketClient();
   swrite(sockfd, &msg, sizeof(msg));
@@ -113,7 +115,7 @@ int main(int argc, char const *argv[]) {
 
     int position;
     printColor("\n%s", "Entrez la position où vous voulez placer la tuile : ", 32);
-    scanf("%d", &position);
+    sread(0, &position, sizeof(int));
 
     if (position < 0 || position > 19) {
       printColor("\n%s\n", "Position invalide", 31);
@@ -149,7 +151,6 @@ int main(int argc, char const *argv[]) {
   swrite(sockfd, &score, sizeof(int));
 
   // lecture du tableau des scores dans le socket
-  
   
 
   

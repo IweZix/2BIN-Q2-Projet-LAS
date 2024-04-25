@@ -7,7 +7,7 @@
 #define PERM 0666
 
 // Socket
-#define SERVER_PORT 8080
+#define SERVER_PORT 9000
 #define SERVER_IP "127.0.0.1"
 #define BACKLOG 5
 

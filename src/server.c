@@ -130,7 +130,7 @@ void child_handler(void* pipeEcriture, void* pipeLecture, void* socket) {
   for (int i = 0; i < MAX_PLAYER; i++) {
     sem_down(sem_id, 0);
     if (shared_memory[i].pseudo[0] != '\0') {
-      printColor("\n%s : %d\n", shared_memory[i].pseudo, shared_memory[i].score);
+      printf("\n%s : %d\n", shared_memory[i].pseudo, shared_memory[i].score);
     }
     sem_up(sem_id, 0);
   }
@@ -344,10 +344,6 @@ int main(int argc, char const *argv[]) {
   for (int i = 0; i < nbPlayer; i++) {
     shared_memory[i].score = players[i].score;
   }
-
-  /*for (int i = 0; i < nbPlayer; i++) {
-    printf("Player : %s, Score : %d\n", shared_memory[i].pseudo, shared_memory[i].score);
-  }*/
 
   // up semaphore
   sem_up(sem_id, 0);
