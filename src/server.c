@@ -228,8 +228,22 @@ int main(int argc, char const *argv[]) {
   /**
    * Génération des tuiles
   */
-
-  int *tuiles = genTuile();
+ int *tuiles;
+  if (argc > 2) {
+    FILE *file = fopen(argv[2], "r");
+    if (file == NULL) {
+      printColor("\n%s\n", "Erreur lors de l'ouverture du fichier", 31);
+      return 1;
+    }
+    tuiles = malloc(20 * sizeof(int));
+    for (int i = 0; i < 20; i++) {
+      fscanf(file, "%d", &tuiles[i]);
+    }
+    fclose(file);
+  } else {
+    tuiles = genTuile();
+  }
+  
 
   // Création de tous les pipes
   int *childTab = malloc(nbPlayer * sizeof(pid_t));
