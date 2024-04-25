@@ -39,7 +39,7 @@ enum Code {
   LECTURE_SCORE = 10,
 
   // End
-  END = 8
+  FIN = 8
 };
 
 // Struct Message

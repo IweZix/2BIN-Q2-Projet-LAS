@@ -159,12 +159,9 @@ int main(int argc, char const *argv[]) {
   int shm_id = sshmget(KEY, MAX_PLAYER*sizeof(Player), IPC_CREAT | PERM);
   // Attach shared memory
   Player *shared_memory = sshmat(shm_id);
-
-  printf("%d", sem_id);
   
   int port = atoi(argv[1]);
   int sockfd = initSocketServer(port);
-  printf("%d", sockfd);
 
   StructMessage msg;
   Player players[MAX_PLAYER];
@@ -370,8 +367,3 @@ int main(int argc, char const *argv[]) {
   closeAll(shared_memory, shm_id, sem_id);
   return 0;
 }
-
-/**
- * Le serveur écrit en mémoire partagée mais le fils n'arrive pas à lire les scores. 
- * Alors qu'il arrive à lire les pseudo.
-*/

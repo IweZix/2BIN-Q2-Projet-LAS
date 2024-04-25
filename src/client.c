@@ -117,6 +117,7 @@ int main(int argc, char const *argv[]) {
     int position;
     printColor("\n%s", "Entrez la position où vous voulez placer la tuile : ", 32);
     scanf("%d", &position);
+    position = position-1;
 
     if (position < 0 || position > 19) {
       printColor("\n%s\n", "Position invalide", 31);
