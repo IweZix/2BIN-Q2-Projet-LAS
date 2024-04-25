@@ -13,14 +13,14 @@
 #include "utils_v1.h"
 #include "header.h"
 
-int initSocketClient() {
+int initSocketClient(int port) {
   int sockfd = ssocket();
-  sconnect(SERVER_IP, SERVER_PORT, sockfd);
+  sconnect(SERVER_IP, port, sockfd);
 
   char buffer[200] = "Le client est connecté sur le port ";
-  char port[10];
-  sprintf(port, "%d", SERVER_PORT);
-  strcat(buffer, port);
+  char portStr[10];
+  sprintf(portStr, "%d", port);
+  strcat(buffer, portStr);
   printColor("\n%s\n", buffer, 32);
 
   return sockfd;
@@ -82,7 +82,8 @@ int main(int argc, char const *argv[]) {
   msg.code = INSCRIPTION_REQUEST;
   printf("Votre nom est : %s\n", msg.message);
 
-  int sockfd = initSocketClient();
+  int port = atoi(argv[1]);
+  int sockfd = initSocketClient(port);
   swrite(sockfd, &msg, sizeof(msg));
 
   /* wait server response */
@@ -116,7 +117,7 @@ int main(int argc, char const *argv[]) {
     int position;
     printColor("\n%s", "Entrez la position où vous voulez placer la tuile : ", 32);
     scanf("%d", &position);
-    
+
     if (position < 0 || position > 19) {
       printColor("\n%s\n", "Position invalide", 31);
       continue;

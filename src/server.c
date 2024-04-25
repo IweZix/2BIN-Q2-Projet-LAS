@@ -19,16 +19,15 @@ typedef void (*childhandler_fn)(void*, void*, void*);
 /**
  * Create a socket server
 */
-int initSocketServer() {
+int initSocketServer(int port) {
   int sockfd = ssocket();
-  sbind(SERVER_PORT, sockfd);
-  slisten(sockfd, BACKLOG);
+  sbind(port, sockfd);
+  slisten(sockfd, 5);
 
-  printf("%d", sockfd);
-  char buffer[200] = "Le serveur tourne sur le port ";
-  char port[10];
-  sprintf(port, "%d", SERVER_PORT);
-  strcat(buffer, port);
+  char buffer[200] = "Le serveur est en écoute sur le port ";
+  char portStr[10];
+  sprintf(portStr, "%d", port);
+  strcat(buffer, portStr);
   printColor("\n%s\n", buffer, 32);
 
   return sockfd;
@@ -142,6 +141,11 @@ void child_handler(void* pipeEcriture, void* pipeLecture, void* socket) {
 
 int main(int argc, char const *argv[]) {
 
+  if (argc < 2) {
+    printColor("\n%s\n", "Usage : ./server [PORT]", 31);
+    return 1;
+  }
+
   /**
    * Initialisation server
   */
@@ -158,7 +162,8 @@ int main(int argc, char const *argv[]) {
 
   printf("%d", sem_id);
   
-  int sockfd = initSocketServer();
+  int port = atoi(argv[1]);
+  int sockfd = initSocketServer(port);
   printf("%d", sockfd);
 
   StructMessage msg;
