@@ -130,7 +130,7 @@ void child_handler(void* pipeEcriture, void* pipeLecture, void* socket) {
   for (int i = 0; i < MAX_PLAYER; i++) {
     sem_down(sem_id, 0);
     if (shared_memory[i].pseudo[0] != '\0') {
-      printf("\n%s : %d\n", shared_memory[i].pseudo, shared_memory[i].score);
+      swrite(*socketfd, &shared_memory[i], sizeof(Player));
     }
     sem_up(sem_id, 0);
   }
@@ -186,7 +186,7 @@ int main(int argc, char const *argv[]) {
       if (nbPlayer < MAX_PLAYER) {
         strcpy(players[nbPlayer].pseudo, msg.message);
         players[nbPlayer].socketfd = newsockfd;
-        players[nbPlayer].score = 0;
+        players[nbPlayer].score = -1;
 
         shared_memory[nbPlayer] = players[nbPlayer];
 
@@ -243,10 +243,6 @@ int main(int argc, char const *argv[]) {
     tuiles[i] = tuilesBase[random];
     tuilesRestantes[random]--;    
   }
-  
-  /*for (int i = 0; i < 20; i++) {
-    printf("%d\n", tuiles[i]);
-  }*/
 
   // Création de tous les pipes
   int *childTab = malloc(nbPlayer * sizeof(pid_t));
@@ -335,6 +331,10 @@ int main(int argc, char const *argv[]) {
         players[j] = temp;
       }
     }
+  }
+
+  for (int i = nbPlayer; i < MAX_PLAYER; i++) {
+    players[i].pseudo[0] = '\0';
   }
 
   // down semaphore

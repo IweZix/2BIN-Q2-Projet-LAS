@@ -115,8 +115,8 @@ int main(int argc, char const *argv[]) {
 
     int position;
     printColor("\n%s", "Entrez la position où vous voulez placer la tuile : ", 32);
-    sread(0, &position, sizeof(int));
-
+    scanf("%d", &position);
+    
     if (position < 0 || position > 19) {
       printColor("\n%s\n", "Position invalide", 31);
       continue;
@@ -151,7 +151,18 @@ int main(int argc, char const *argv[]) {
   swrite(sockfd, &score, sizeof(int));
 
   // lecture du tableau des scores dans le socket
+  Player players[MAX_PLAYER];
+  for (int i = 0; i < MAX_PLAYER; i++) {
+    sread(sockfd, &players[i], sizeof(Player));
+  }
   
+  printColor("\n%s\n", "Voici le tableau des scores", 32);
+  for (int i = 0; i < MAX_PLAYER; i++) {
+      if (players[i].pseudo[0] != '\0' && players[i].score > 0 && players[i].socketfd > 0) {
+          printf("%s : %d\n", players[i].pseudo, players[i].score);
+      }
+  }
+
 
   
   close(sockfd);
