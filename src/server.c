@@ -1,3 +1,10 @@
+/**
+ * Groupe 8
+ * NICOLAS LUca
+ * DE SMET Kilian
+ * DIERYCK Emilien
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
