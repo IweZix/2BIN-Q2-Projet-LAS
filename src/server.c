@@ -32,6 +32,7 @@ struct {
   Player *shared_memory;
   int shm_id;
   int sem_id;
+  int socket;
 } handler_args;
 
 /**
@@ -67,6 +68,7 @@ void closeAll(Player *shared_memory, int shm_id, int sem_id) {
 void sigint_handler(int signum) {
   printColor("\n%s\n","Server is shutting down by SIGINT...", 33);
   closeAll(handler_args.shared_memory, handler_args.shm_id, handler_args.sem_id);
+  close(handler_args.socket);
   exit(0);
 }
 
@@ -185,6 +187,7 @@ int main(int argc, char const *argv[]) {
     handler_args.shared_memory = shared_memory;
     handler_args.shm_id = shm_id;
     handler_args.sem_id = sem_id;
+    handler_args.socket = sockfd;
 
     StructMessage msg;
     Player players[MAX_PLAYER];
