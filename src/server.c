@@ -34,13 +34,13 @@ int initSocketServer(int port) {
   return sockfd;
 }
 
-/**
- * Handle SIGINT signal
-*/
-void sigint_handler(int signum) {
-  printColor("\n%s\n","Server is shutting down by SIGINT...", 33);
-  exit(0);
-}
+struct {
+  Player *shared_memory;
+  int shm_id;
+  int sem_id;
+} handler_args;
+
+
 
 volatile sig_atomic_t end = 0;
 
@@ -64,6 +64,15 @@ void closeAll(Player *shared_memory, int shm_id, int sem_id) {
   sem_delete(sem_id);
   // reset end
   end = 0;
+}
+
+/**
+ * Handle SIGINT signal
+*/
+void sigint_handler(int signum) {
+  printColor("\n%s\n","Server is shutting down by SIGINT...", 33);
+  closeAll(handler_args.shared_memory, handler_args.shm_id, handler_args.sem_id);
+  exit(0);
 }
 
 /**
@@ -124,8 +133,6 @@ void child_handler(void* pipeEcriture, void* pipeLecture, void* socket) {
     sread(pipefdLecture[0], &pipeCommunicationLecture, sizeof(pipeCommunicationLecture));
   }
 
-  printf("message de lecture des scores\n");
-
   // lectrue des scores en mémoire partagée
   int sem_id = sem_create(SEM_KEY, 2, PERM, 1);
   int shmid = sshmget(KEY, MAX_PLAYER*sizeof(Player), 0);
@@ -170,6 +177,10 @@ int main(int argc, char const *argv[]) {
     int shm_id = sshmget(KEY, MAX_PLAYER*sizeof(Player), IPC_CREAT | PERM);
     // Attach shared memory
     Player *shared_memory = sshmat(shm_id);
+
+    handler_args.shared_memory = shared_memory;
+    handler_args.shm_id = shm_id;
+    handler_args.sem_id = sem_id;
     
   
 
@@ -227,12 +238,14 @@ int main(int argc, char const *argv[]) {
 
     if (nbPlayer < 2) {
       printColor("\n%s\n", "Il n'y a pas assez de joueurs pour lancer la partie", 31);
+      for (int i = 0; i < nbPlayer; i++) {
+        sclose(players[i].socketfd);
+      }
       close(sockfd);
       closeAll(shared_memory, shm_id, sem_id);
       return 0;
     }
     
-
     for (int i = 0; i < nbPlayer; i++) {
       printf("%d\n", fds[i].fd);
     }

@@ -53,7 +53,6 @@ int calculeScore(int plateau[20]) {
 
         if (longueur_suite >= 2) {
             nb_suites++;
-
             suites_par_longueur[longueur_suite]++;
         }
         i++;
@@ -64,8 +63,7 @@ int calculeScore(int plateau[20]) {
 
 
     int score_total = 0;
-    for (int k = 2; k < 21; k++) { // Modifier la boucle pour inclure les index jusqu'à 20
-        printf("score pour suite de longueur %d : %d\n", k, suites_par_longueur[k] * scores[k-1]);
+    for (int k = 2; k < 21; k++) {
         score_total += suites_par_longueur[k] * scores[k-1];
     }
 
