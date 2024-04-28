@@ -70,18 +70,18 @@ void child_handler(void* pipeEcriture, void* pipeLecture, void* socket) {
   
   StructClientCommunication clientCommunication;
 
+  /**
+   * Game
+  */
   int nbTour = 0;
   while (nbTour < 20) {
-    // Lecture de la tuile
     sread(pipefdLecture[0], &pipeCommunicationLecture, sizeof(pipeCommunicationLecture));
     int tuile = pipeCommunicationLecture.tuile;
 
-    // Envoi de la tuile
     clientCommunication.tuile = tuile;
     clientCommunication.code = ENVOIE_TUILE;
     swrite(*socketfd, &clientCommunication, sizeof(clientCommunication));
 
-    // Lecture de l'emplacement
     sread(*socketfd, &clientCommunication, sizeof(clientCommunication));
     while (clientCommunication.code != RECEPTION_EMPLACEMENT) {
       sread(*socketfd, &clientCommunication, sizeof(clientCommunication));
@@ -89,7 +89,6 @@ void child_handler(void* pipeEcriture, void* pipeLecture, void* socket) {
 
     int emplacement = clientCommunication.emplacement;
 
-    // Envoi de l'emplacement
     pipeCommunicationEcriture.tuile = emplacement;
     pipeCommunicationEcriture.code = ENVOIE_PARENT;
     swrite(pipefdEcriture[1], &pipeCommunicationEcriture, sizeof(pipeCommunicationEcriture));
@@ -102,20 +101,26 @@ void child_handler(void* pipeEcriture, void* pipeLecture, void* socket) {
     sread(pipefdLecture[0], &pipeCommunicationLecture, sizeof(pipeCommunicationLecture));
   }
 
-  // récupération et envoie du score aux serveur
+  /**
+   * Read and send score to parent
+  */
   int score;
   sread(*socketfd, &score, sizeof(int));
   pipeCommunicationEcriture.tuile = score;
   pipeCommunicationEcriture.code = ENVOIE_SCORE;
   swrite(pipefdEcriture[1], &pipeCommunicationEcriture, sizeof(pipeCommunicationEcriture));
 
-  // récupération du message de lecture des scores
+  /**
+   * Wait message to read scores
+  */
   sread(pipefdLecture[0], &pipeCommunicationLecture, sizeof(pipeCommunicationLecture));
   while (pipeCommunicationLecture.code != LECTURE_SCORE) {
     sread(pipefdLecture[0], &pipeCommunicationLecture, sizeof(pipeCommunicationLecture));
   }
 
-  // lectrue des scores en mémoire partagée
+  /**
+   * Read scores in shared memory
+  */
   int sem_id = sem_create(SEM_KEY, 2, PERM, 1);
   int shmid = sshmget(KEY, MAX_PLAYER*sizeof(Player), 0);
   Player *shared_memory = sshmat(shmid);
@@ -179,12 +184,11 @@ int main(int argc, char const *argv[]) {
     alarm(10);
     while (!end) {
 
-      // accept connection
       int newsockfd = accept(sockfd, NULL, NULL);
       if (newsockfd > 0) {
-        // read pseudo
+
         sread(newsockfd, &msg, sizeof(msg));
-        // stdout pseudo
+
         char buffer[200] = "Inscription demandée par le joueur ";
         strcat(buffer, msg.message);
         printColor("\n%s\n", buffer, 32);
@@ -231,7 +235,7 @@ int main(int argc, char const *argv[]) {
     }
 
     /**
-     * Génération des tuiles
+     * Tuiles generation
     */
     int *tuiles;
     if (argc > 2) {
@@ -255,7 +259,9 @@ int main(int argc, char const *argv[]) {
     }
     
 
-    // Création de tous les pipes
+    /**
+     * Pipe creation
+    */
     int *childTab = malloc(nbPlayer * sizeof(pid_t));
 
     struct pollfd *fdsChildLecture = malloc(nbPlayer * sizeof(struct pollfd));
@@ -277,7 +283,9 @@ int main(int argc, char const *argv[]) {
       fdsChildEcriture[i].events = POLLOUT;
     }
 
-    // Envoi des tuiles
+    /**
+     * Game
+    */
     int tour = 1;
     StructPipeCommunication pipeCommunication;
 
@@ -308,14 +316,18 @@ int main(int argc, char const *argv[]) {
 
     printf("Fin du jeu\n");
 
-    // envoie un message au pipe pour signalez la fin du jeu
+    /**
+     * Send message to children to send their score
+    */
     for (int i = 0; i < nbPlayer; i++) {
       pipeCommunication.tuile = 0;
       pipeCommunication.code = ENVOIE_SCORE;
       swrite(fdsChildEcriture[i].fd, &pipeCommunication, sizeof(pipeCommunication));
     }
 
-    // récupère les scores avec poll
+    /**
+     * Wait for children to send their score
+    */
     int nbPlayerScore = 0;
     StructPipeCommunication pipeCommunicationScore;
     while (nbPlayerScore < nbPlayer) {
@@ -331,7 +343,9 @@ int main(int argc, char const *argv[]) {
       }
     }
 
-    // tri des scores
+    /**
+     * Sort players by score
+    */
     for (int i = 0; i < nbPlayer; i++) {
       for (int j = i+1; j < nbPlayer; j++) {
         if (players[i].score < players[j].score) {
@@ -342,7 +356,6 @@ int main(int argc, char const *argv[]) {
       }
     }
 
-
     for (int i = nbPlayer; i < MAX_PLAYER; i++) {
       players[i].pseudo[0] = '\0';
     }
@@ -350,7 +363,9 @@ int main(int argc, char const *argv[]) {
     // down semaphore
     sem_down(sem_id, 0);
 
-    // envoi des scores en mémoire
+    /**
+     * Update shared memory
+    */
     for (int i = 0; i < MAX_PLAYER; i++) {
       shared_memory[i] = players[i];
     }
@@ -358,7 +373,9 @@ int main(int argc, char const *argv[]) {
     // up semaphore
     sem_up(sem_id, 0);
 
-    // envoie un message au pipe pour dire qu'il peut lire les scores
+    /**
+     * Send message to children to read scores
+    */
     for (int i = 0; i < nbPlayer; i++) {
       pipeCommunication.tuile = 0;
       pipeCommunication.code = LECTURE_SCORE;
@@ -370,7 +387,6 @@ int main(int argc, char const *argv[]) {
       swaitpid(childTab[i], NULL, 0);
     }
 
-    // close memory shared
     end = 0;
 
     for (int i = 0; i < nbPlayer; i++) {
