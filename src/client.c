@@ -12,19 +12,7 @@
 
 #include "utils_v1.h"
 #include "header.h"
-
-int initSocketClient(int port) {
-  int sockfd = ssocket();
-  sconnect(SERVER_IP, port, sockfd);
-
-  char buffer[200] = "Le client est connecté sur le port ";
-  char portStr[10];
-  sprintf(portStr, "%d", port);
-  strcat(buffer, portStr);
-  printColor("\n%s\n", buffer, 32);
-
-  return sockfd;
-}
+#include "socket.h"
 
 void printPlateau(int *plateau) {
   for (int i = 0; i < 20; i++) {
@@ -43,7 +31,7 @@ int calculeScore(int plateau[20]) {
 
         int debut_suite = i;
 
-        while (i < 19 && (plateau[i] <= plateau[i+1] || plateau[i] == 31 || plateau[i+1] == 31)) {
+        while (i < 19 && (plateau[i] <= plateau[i+1] || (plateau[i] == 31 && plateau[i+1] > plateau[i-1]) || plateau[i+1] == 31)) {
             i++;
         }
 
@@ -53,7 +41,6 @@ int calculeScore(int plateau[20]) {
 
         if (longueur_suite >= 2) {
             nb_suites++;
-
             suites_par_longueur[longueur_suite]++;
         }
         i++;
@@ -64,7 +51,7 @@ int calculeScore(int plateau[20]) {
 
 
     int score_total = 0;
-    for (int k = 2; k < 21; k++) { // Modifier la boucle pour inclure les index jusqu'à 20
+    for (int k = 2; k < 21; k++) {
         score_total += suites_par_longueur[k] * scores[k-1];
     }
 
@@ -152,7 +139,6 @@ int main(int argc, char const *argv[]) {
   
   swrite(sockfd, &score, sizeof(int));
 
-  // lecture du tableau des scores dans le socket
   Player players[MAX_PLAYER];
   for (int i = 0; i < MAX_PLAYER; i++) {
     sread(sockfd, &players[i], sizeof(Player));

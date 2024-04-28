@@ -6,14 +6,14 @@ ALL= server client
 
 all: $(ALL)
 
-client : client.o utils_v1.o header.h
-	$(CC) $(CCFLAGS) -o client client.o utils_v1.o
+client : client.o utils_v1.o socket.o header.h
+	$(CC) $(CCFLAGS) -o client client.o utils_v1.o socket.o
 client.o : client.c
 	$(CC) $(CCFLAGS) -c client.c
 
 
-server : server.o utils_v1.o tuile.o header.h 
-	$(CC) $(CCFLAGS) -o server server.o utils_v1.o tuile.o
+server : server.o utils_v1.o tuile.o socket.o header.h 
+	$(CC) $(CCFLAGS) -o server server.o utils_v1.o tuile.o socket.o
 server.o : server.c
 	$(CC) $(CCFLAGS) -c server.c
 
@@ -23,6 +23,9 @@ utils_v1.o: utils_v1.c utils_v1.h
 
 tuile.o: tuile.c tuile.h utils_v1.h
 	$(CC) $(CCFLAGS) -c tuile.c
+
+socket.o: socket.c socket.h utils_v1.h
+	$(CC) $(CCFLAGS) -c socket.c
 
 clean:
 	rm -f *.o
