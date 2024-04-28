@@ -43,7 +43,7 @@ int calculeScore(int plateau[20]) {
 
         int debut_suite = i;
 
-        while (i < 19 && (plateau[i] <= plateau[i+1] || plateau[i] == 31 || plateau[i+1] == 31)) {
+        while (i < 19 && (plateau[i] <= plateau[i+1] || (plateau[i] == 31 && plateau[i+1] > plateau[i-1]) || plateau[i+1] == 31)) {
             i++;
         }
 
@@ -65,6 +65,7 @@ int calculeScore(int plateau[20]) {
 
     int score_total = 0;
     for (int k = 2; k < 21; k++) { // Modifier la boucle pour inclure les index jusqu'à 20
+        printf("score pour suite de longueur %d : %d\n", k, suites_par_longueur[k] * scores[k-1]);
         score_total += suites_par_longueur[k] * scores[k-1];
     }
 

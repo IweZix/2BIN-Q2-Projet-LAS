@@ -37,7 +37,7 @@ int initSocketServer(int port) {
 /**
  * Handle SIGINT signal
 */
-void sigint_handler() {
+void sigint_handler(int signum) {
   printColor("\n%s\n","Server is shutting down by SIGINT...", 33);
   exit(0);
 }
@@ -155,6 +155,8 @@ int main(int argc, char const *argv[]) {
   int port = atoi(argv[1]);
   int sockfd = initSocketServer(port);
 
+  long currentFilePos = 0;
+
   while (1) {
 
     // Handle signals
@@ -238,7 +240,7 @@ int main(int argc, char const *argv[]) {
     /**
      * Génération des tuiles
     */
-  int *tuiles;
+    int *tuiles;
     if (argc > 2) {
       FILE *file = fopen(argv[2], "r");
       if (file == NULL) {
@@ -246,9 +248,14 @@ int main(int argc, char const *argv[]) {
         return 1;
       }
       tuiles = malloc(20 * sizeof(int));
+      fseek(file, currentFilePos, SEEK_SET);
+
       for (int i = 0; i < 20; i++) {
         fscanf(file, "%d", &tuiles[i]);
       }
+
+      currentFilePos = ftell(file);
+
       fclose(file);
     } else {
       tuiles = genTuile();
@@ -266,8 +273,6 @@ int main(int argc, char const *argv[]) {
       spipe(pipefdLecture);
       int pipefdEcriture[2];
       spipe(pipefdEcriture);
-
-      
 
       pid_t childId = fork_and_run3((childhandler_fn) child_handler, pipefdLecture, pipefdEcriture, &players[i].socketfd);
       childTab[i] = childId;
