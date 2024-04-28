@@ -6,8 +6,8 @@ ALL= server client
 
 all: $(ALL)
 
-client : client.o utils_v1.o socket.o header.h
-	$(CC) $(CCFLAGS) -o client client.o utils_v1.o socket.o
+client : client.o utils_v1.o socket.o header.h tuile.o
+	$(CC) $(CCFLAGS) -o client client.o utils_v1.o socket.o tuile.o
 client.o : client.c
 	$(CC) $(CCFLAGS) -c client.c
 

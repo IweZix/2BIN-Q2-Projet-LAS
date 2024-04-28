@@ -2,6 +2,7 @@
     "files.associations": {
         "utils_v1.h": "c",
         "socket.h": "c",
-        "shm.h": "c"
+        "shm.h": "c",
+        "stdlib.h": "c"
     }
 }

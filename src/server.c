@@ -366,15 +366,7 @@ int main(int argc, char const *argv[]) {
     /**
      * Sort players by score
     */
-    for (int i = 0; i < nbPlayer; i++) {
-      for (int j = i+1; j < nbPlayer; j++) {
-        if (players[i].score < players[j].score) {
-          Player temp = players[i];
-          players[i] = players[j];
-          players[j] = temp;
-        }
-      }
-    }
+    sortPlayersByScore(players, nbPlayer);
 
     for (int i = nbPlayer; i < MAX_PLAYER; i++) {
       players[i].pseudo[0] = '\0';

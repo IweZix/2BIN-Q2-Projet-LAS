@@ -13,50 +13,7 @@
 #include "utils_v1.h"
 #include "header.h"
 #include "socket.h"
-
-void printPlateau(int *plateau) {
-  for (int i = 0; i < 20; i++) {
-    printf("%d ", plateau[i]);
-  }
-  printf("\n");
-}
-
-int calculeScore(int plateau[20]) {
-    int nb_suites = 0; 
-    int suites_par_longueur[21] = {0};
-
-    int i = 0;
-    
-    while (i < 20) {
-
-        int debut_suite = i;
-
-        while (i < 19 && (plateau[i] <= plateau[i+1] || (plateau[i] == 31 && plateau[i+1] > plateau[i-1]) || plateau[i+1] == 31)) {
-            i++;
-        }
-
-        int fin_suite = i;
-
-        int longueur_suite = fin_suite - debut_suite + 1;
-
-        if (longueur_suite >= 2) {
-            nb_suites++;
-            suites_par_longueur[longueur_suite]++;
-        }
-        i++;
-    }
-
-
-    int scores[] = {0, 1, 3, 5, 7, 9, 11, 15, 20, 25, 30, 35, 40, 50, 60, 70, 85, 100, 150, 300};
-
-
-    int score_total = 0;
-    for (int k = 2; k < 21; k++) {
-        score_total += suites_par_longueur[k] * scores[k-1];
-    }
-
-    return score_total;
-}
+#include "tuile.h"
 
 int main(int argc, char const *argv[]) {
 
