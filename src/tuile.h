@@ -11,4 +11,9 @@
 */
 int *genTuile();
 
+/**
+ * Sort player by score
+*/
+void sortPlayersByScore(Player *players, int nbPlayers);
+
 #endif // _TUILE_H_

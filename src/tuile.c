@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "utils_v1.h"
+#include "header.h"
 
 int* genTuile() {
     int tuilesBase[31] = {
@@ -24,4 +25,16 @@ int* genTuile() {
     }
 
     return tuiles;
+}
+
+void sortPlayersByScore(Player *players, int nbPlayers) {
+    for (int i = 0; i < nbPlayers; i++) {
+        for (int j = i + 1; j < nbPlayers; j++) {
+            if (players[i].score < players[j].score) {
+                Player temp = players[i];
+                players[i] = players[j];
+                players[j] = temp;
+            }
+        }
+    }
 }
