@@ -14,33 +14,15 @@
 #include "utils_v1.h"
 #include "header.h"
 #include "tuile.h"
+#include "socket.h"
 
 typedef void (*childhandler_fn)(void*, void*, void*); 
-
-/**
- * Create a socket server
-*/
-int initSocketServer(int port) {
-  int sockfd = ssocket();
-  sbind(port, sockfd);
-  slisten(sockfd, 5);
-
-  char buffer[200] = "Le serveur est en écoute sur le port ";
-  char portStr[10];
-  sprintf(portStr, "%d", port);
-  strcat(buffer, portStr);
-  printColor("\n%s\n", buffer, 32);
-
-  return sockfd;
-}
 
 struct {
   Player *shared_memory;
   int shm_id;
   int sem_id;
 } handler_args;
-
-
 
 volatile sig_atomic_t end = 0;
 
@@ -181,8 +163,6 @@ int main(int argc, char const *argv[]) {
     handler_args.shared_memory = shared_memory;
     handler_args.shm_id = shm_id;
     handler_args.sem_id = sem_id;
-    
-  
 
     StructMessage msg;
     Player players[MAX_PLAYER];
