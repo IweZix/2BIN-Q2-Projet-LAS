@@ -14,4 +14,9 @@
 */
 int initSocketServer(int port);
 
+/**
+ * Initialize the client socket
+*/
+int initSocketClient(int port);
+
 #endif

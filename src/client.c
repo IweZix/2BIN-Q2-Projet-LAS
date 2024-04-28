@@ -12,19 +12,7 @@
 
 #include "utils_v1.h"
 #include "header.h"
-
-int initSocketClient(int port) {
-  int sockfd = ssocket();
-  sconnect(SERVER_IP, port, sockfd);
-
-  char buffer[200] = "Le client est connecté sur le port ";
-  char portStr[10];
-  sprintf(portStr, "%d", port);
-  strcat(buffer, portStr);
-  printColor("\n%s\n", buffer, 32);
-
-  return sockfd;
-}
+#include "socket.h"
 
 void printPlateau(int *plateau) {
   for (int i = 0; i < 20; i++) {
