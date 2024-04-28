@@ -16,4 +16,14 @@ int *genTuile();
 */
 void sortPlayersByScore(Player *players, int nbPlayers);
 
+/**
+ * Print the board
+*/
+void printPlateau(int *plateau);
+
+/**
+ * Caclulate the score
+*/
+int calculeScore(int *plateau);
+
 #endif // _TUILE_H_
