@@ -139,7 +139,6 @@ int main(int argc, char const *argv[]) {
   
   swrite(sockfd, &score, sizeof(int));
 
-  // lecture du tableau des scores dans le socket
   Player players[MAX_PLAYER];
   for (int i = 0; i < MAX_PLAYER; i++) {
     sread(sockfd, &players[i], sizeof(Player));
