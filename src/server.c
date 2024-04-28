@@ -18,12 +18,18 @@
 
 typedef void (*childhandler_fn)(void*, void*, void*); 
 
+/**
+ * Use to pass arguments to csigint_handler
+*/
 struct {
   Player *shared_memory;
   int shm_id;
   int sem_id;
 } handler_args;
 
+/**
+ * Use to verify if the game is finished
+*/
 volatile sig_atomic_t end = 0;
 
 /**
@@ -96,6 +102,9 @@ void child_handler(void* pipeEcriture, void* pipeLecture, void* socket) {
     nbTour++;
   }
 
+  /**
+   * Wait message to send score
+  */
   sread(pipefdLecture[0], &pipeCommunicationLecture, sizeof(pipeCommunicationLecture));
   while (pipeCommunicationLecture.code != ENVOIE_SCORE) {
     sread(pipefdLecture[0], &pipeCommunicationLecture, sizeof(pipeCommunicationLecture));
@@ -149,6 +158,7 @@ int main(int argc, char const *argv[]) {
   int port = atoi(argv[1]);
   int sockfd = initSocketServer(port);
 
+  // To save the current position in the file of tuiles
   long currentFilePos = 0;
 
   while (1) {
